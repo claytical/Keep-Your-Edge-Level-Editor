@@ -23,3 +23,7 @@ The level file contains all the sets of patterns you want for a level. It'll cyc
 <multiplier>1.01</multiplier>
 <file>small.xml</file>
 ```
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/claytical/keep-your-edge-level-editor/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
