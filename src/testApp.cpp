@@ -45,6 +45,7 @@ void testApp::setup(){
     pointSize = 40;
     creatingEnemies = false;
     patternNumber = 0;
+    ofSetRectMode(OF_RECTMODE_CORNER);
 }
 
 //--------------------------------------------------------------
@@ -54,7 +55,6 @@ void testApp::update(){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-    ofSetRectMode(OF_RECTMODE_CENTER);
 //DRAW GRID
     ofSetColor(200, 200, 200);
     for (int x = 0; x < ofGetWidth(); x += SPACER) {
@@ -116,7 +116,6 @@ void testApp::draw(){
     }
     ofSetColor(0, 0, 0);
     ofFill();
-    ofSetRectMode(OF_RECTMODE_CORNER);
     ofRect(0, ofGetHeight() - 80, ofGetWidth(), ofGetHeight());
     
 
