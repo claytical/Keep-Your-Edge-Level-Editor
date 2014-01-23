@@ -28,7 +28,6 @@ class testApp : public ofBaseApp{
 
         void savePattern();
 		ofxXmlSettings XML;
-        int pointSize;
         ofPoint currentLocation;
         ofPoint canvasLocation;
         ofPoint startLine;
@@ -39,6 +38,7 @@ class testApp : public ofBaseApp{
         bool testingSpeed;
         int patternNumber;
         int buttonCount;
+        int pointSize;
         float speed;
         float multiplier;
         float currentSpeed;
@@ -51,6 +51,12 @@ class testApp : public ofBaseApp{
         ofxUITabBar *guiTabBar;
         ofxUITextInput *levelInput;
         ofxUITextInput *patternInput;
+        ofxUITextInput *authorInput;
+        ofxUITextInput *completeInput;
+        ofxUISlider *speedSlider;
+        ofxUISlider *multiSlider;
+        ofxUIToggle *usingCanvas;
+
         ofxUIDropDownList *patternList;
         ofxUILabelButton *removeButton;
 

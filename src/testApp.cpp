@@ -6,73 +6,57 @@ void testApp::setup(){
 	ofBackground(255,255,255);
     ofSetRectMode(OF_RECTMODE_CORNER);
     ofEnableAlphaBlending();
-    guiTabBar = new ofxUITabBar();
-
+    /* SETUP INITIAL VARAIBLES */
+    currentLocation.set(160, ofGetHeight()/2);
+    canvasLocation.set(0, 500);
+    startLine.y = 0;
+    pointSize = 40;
+    creatingEnemies = false;
+    patternNumber = 0;
+    startingTest.set(ofGetWidth() - 50, ofGetHeight()/4);
+    currentTest.set(startingTest.x, startingTest.y);
+    endingTest.set(ofGetHeight(), ofGetWidth()/2);
+    multiplier = 1;
     loadedFile = "pattern.xml";
     testingSpeed = false;
-	if( XML.loadFile(loadedFile) ){
-    }
-    /*
-    else {
-
-        int tagNum = XML.addTag("level");
-        XML.setValue("level:name", "New Level", tagNum);
-        XML.setValue("level:speed", 1, tagNum);
-    }
-*/
-
-    for (int i = 0; i < XML.getNumTags("enemy"); i++) {
-        ofPoint tmpPoint;
-        tmpPoint.set(XML.getValue("enemy:x", 0, i), XML.getValue("enemy:y", 0, i), XML.getValue("enemy:size", 0, i));
-        enemies.push_back(tmpPoint);
-    }
-
-    for (int i = 0; i < XML.getNumTags("collectable"); i++) {
-        ofPoint tmpPoint;
-        tmpPoint.set(XML.getValue("collectable:x", 0, i), XML.getValue("collectable:y", 0, i), XML.getValue("collectable:size", 0, i));
-        collectables.push_back(tmpPoint);
-    }
     buttonCount = 0;
+
+    guiTabBar = new ofxUITabBar();
     gui = new ofxUICanvas(320, ofGetHeight());
     levelGui = new ofxUICanvas(320, ofGetHeight());
 
-    vector<string> hnames;
-    hnames.push_back("ENEMIES");
-    hnames.push_back("COLLECTABLES");
+/* SETUP LEVEL GUI */
     levelGui->addLabel("Level Name");
     levelInput = levelGui->addTextInput("LEVEL", "Name of Level");
-    ofxUILabelButton *openButton = gui->addLabelButton("OPEN EXISTING PATTERN", "OPEN");
-    patternInput = gui->addTextInput("PATTERN", "pattern0");
-    gui->addSpacer();
     levelGui->addLabel("Author");
-    levelGui->addTextInput("AUTHOR", "Your Name");
+    authorInput = levelGui->addTextInput("AUTHOR", "Your Name");
+    levelGui->addSpacer(320, 10);
+    levelGui->addLabel("Number of edges to collect");
+    completeInput = levelGui->addTextInput("COMPLETE", "100");
     levelGui->addSpacer(320, 10);
     levelGui->addLabel("Speed");
-    levelGui->addSlider("Starting", -.3, -9, -1, 150, 80);
+    speedSlider = levelGui->addSlider("Starting", -.3, -9, -1, 100, 80);
     levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-	levelGui->addSlider("Multiplier", 1, 3, 1, 150, 80);
+	multiSlider = levelGui->addSlider("Multiplier", 1, 3, 1, 100, 80);
 	levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_DOWN);
     levelGui->addSpacer(320, 20);
-
-//    levelGui->setWidgetFontSize(OFX_UI_FONT_SMALL);
-
     patternList = levelGui->addDropDownList("Included Patterns", patterns, 150);
-//    levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-//    ofxUILabelButton *removeButton = (ofxUILabelButton *) levelGui->addLabelButton("REMOVE PATTERN", "REMOVE PATTERN");
     levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
-
     removeButton = (ofxUILabelButton *) levelGui->addLabelButton("REMOVE PATTERN", "REMOVE PATTERN", 150, 15);
     removeButton->setVisible(false);
     levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_DOWN);
     levelGui->addSpacer(320, 200);
     levelGui->addLabelButton("SAVE LEVEL", "LEVEL", 310, 40);
+    levelGui->setName("Level");
 
-    //    levelGui->addWidgetEastOf(new ofxUILabelButton("REMOVE PATTERN", "REMOVE PATTERN"), "REMOVE PATTERN BUTTON");
-    //    gui->addWidgetEastOf(new ofxUISlider("0", 0.0, 255.0, 150, dim, 190), "PAD");
-
-    //	levelGui->setWidgetPosition(OFX_UI_WIDGET_POSITION_DOWN);
+/* SETUP PATTERN GUI */
     
-
+    vector<string> hnames;
+    hnames.push_back("ENEMIES");
+    hnames.push_back("COLLECTABLES");
+    ofxUILabelButton *openButton = gui->addLabelButton("OPEN EXISTING PATTERN", "OPEN");
+    patternInput = gui->addTextInput("PATTERN", "pattern0");
+    gui->addSpacer();
 	gui->addLabel("Placing");
 	ofxUIRadio *radio = gui->addRadio("PLACING", hnames, OFX_UI_ORIENTATION_HORIZONTAL);
     radio->activateToggle("COLLECTABLES");
@@ -80,42 +64,29 @@ void testApp::setup(){
     gui->addLabel("Object Size");
     ofxUISlider *sizeSlider = gui->addBiLabelSlider("SIZE", "TINY", "LARGE", SPACER, 160, pointSize, 310, 10);
     sizeSlider->setIncrement(SPACER);
-
-    
-    
-    sizeSlider->setIncrement(SPACER);
+    gui->addSpacer(320,10);
+    usingCanvas = gui->addToggle("USING CANVAS", false);
     gui->addSpacer(320, 40, "SPACE4");
     gui->addTextArea("INSTRUCTIONS4", "ARROW KEYS move an object");
     gui->addTextArea("INSTRUCTIONS2", "SPACE places an object");
     gui->addTextArea("INSTRUCTIONS3", "BACKSPACE removes the object");
     gui->addTextArea("INSTRUCTIONS4", "[ and ] moves the canvas position");
-
     gui->addSpacer(320, 30, "SPACE1");
-    ofxUILabelButton *clearButton = gui->addLabelButton("CLEAR PATTERN", "CLEAR");
-    ofxUILabelButton *saveButton = gui->addLabelButton("SAVE PATTERN", "SAVE");
-    gui->addLabelButton("ADD TO LEVEL", "ADD TO LEVEL");
-
-
+    gui->setWidgetFontSize(OFX_UI_FONT_SMALL);
+    ofxUILabelButton *clearButton = gui->addLabelButton("clear pattern", "CLEAR", 100, 30);
+    gui->setWidgetPosition(OFX_UI_WIDGET_POSITION_RIGHT);
+    ofxUILabelButton *saveButton = gui->addLabelButton("save pattern", "SAVE", 100, 30);
+    gui->addLabelButton("add to level", "ADD LEVEL", 100, 30);
+    gui->setWidgetPosition(OFX_UI_WIDGET_POSITION_DOWN);
     gui->setName("Pattern");
-    levelGui->setName("Level");
+    
+/* SETUP TABS */
     guiTabBar->addCanvas(levelGui);
     guiTabBar->addCanvas(gui);
     guiTabBar->setPosition(250, 0);
-	//load a monospaced font
-	//which we will use to show part of the xml structure
-    currentLocation.set(160, ofGetHeight()/2);
-    canvasLocation.set(0, 500);
+
+/* SETUP EVENT LISTENERS */
     
-//    startLine.x = currentLocation.x - canvasLocation.x;
-    startLine.y = 0;
-    pointSize = 40;
-    creatingEnemies = false;
-    patternNumber = 0;
-    ofSetRectMode(OF_RECTMODE_CORNER);
-    startingTest.set(ofGetHeight()/2, ofGetWidth()/2);
-    currentTest.set(startingTest.x, startingTest.y);
-    endingTest.set(ofGetHeight(), ofGetWidth()/2);
-    multiplier = 1;
     ofAddListener(gui->newGUIEvent,this,&testApp::guiEvent);
     ofAddListener(levelGui->newGUIEvent,this,&testApp::guiEvent);
 }
@@ -140,6 +111,7 @@ void testApp::draw(){
 //DRAW PLACEMENTS
     ofSetColor(0, 0, 0);
 	ofFill();
+//FUTURE IMAGE SPRITES
     for (int i = 0; i < enemies.size(); i++) {
         if (spriteEnemy.isAllocated()) {
             ofSetColor(255, 255, 255);
@@ -147,7 +119,6 @@ void testApp::draw(){
             spriteEnemy.draw(enemies[i].x + canvasLocation.x, enemies[i].y + canvasLocation.y, spriteEnemy.getWidth(), spriteEnemy.getHeight());
         } else {
             ofCircle(enemies[i].x + canvasLocation.x, enemies[i].y + canvasLocation.y, enemies[i].z);
-//            ofRect(enemies[i].x + canvasLocation.x, enemies[i].y + canvasLocation.y, enemies[i].z, enemies[i].z);
         }
     }
     
@@ -159,7 +130,6 @@ void testApp::draw(){
         } else {
             ofRect(collectables[i].x + canvasLocation.x, collectables[i].y + canvasLocation.y, collectables[i].z, collectables[i].z);
 
-            //ofCircle(collectables[i].x + canvasLocation.x, collectables[i].y + canvasLocation.y, collectables[i].z);
         }
     }
     
@@ -171,7 +141,6 @@ void testApp::draw(){
             spriteEnemy.draw(currentLocation.x, currentLocation.y, spriteEnemy.getWidth(), spriteEnemy.getHeight());
         } else {
             ofCircle(currentLocation.x, currentLocation.y, pointSize);
-//            ofRect(currentLocation.x, currentLocation.y, pointSize, pointSize);
         }
 
     }
@@ -180,13 +149,14 @@ void testApp::draw(){
             ofSetColor(255, 255, 255);
             spriteCollectable.draw(currentLocation.x, currentLocation.y, spriteCollectable.getWidth(), spriteCollectable.getHeight());
         } else {
-//            ofCircle(currentLocation.x, currentLocation.y, pointSize);
             ofRect(currentLocation.x, currentLocation.y, pointSize, pointSize);
 
         }
         
     }
-    if (currentTest.y > ofGetHeight()) {
+
+    /* SPEED TEST DISPLAY */
+    if (currentTest.y > ofGetHeight() - ofGetHeight()/3) {
         currentSpeed = currentSpeed * multiplier;
         currentTest = startingTest;
     }
@@ -198,6 +168,8 @@ void testApp::draw(){
     ofSetColor(255, 0, 0);
     ofRect(currentTest.x, currentTest.y, 5, 5);
     
+    /* SHOW PROTAGONIST ON THE GRID ONLY */
+
     if (mouseX <= ofGetWidth()/2) {
         ofSetColor(0, 255, 0);
         ofSetRectMode(OF_RECTMODE_CENTER);
@@ -209,70 +181,71 @@ void testApp::draw(){
 //--------------------------------------------------------------
 void testApp::keyPressed  (int key){
 
-    //no data gets saved unless you hit the s key
-
-    if (key == '+') {
-        pointSize+= SPACER;
-    }
-    if (key == '-') {
-        if (pointSize > SPACER) {
-            pointSize-= SPACER;
+    if (usingCanvas->getValue()) {
+        if (key == '+') {
+            pointSize+= SPACER;
         }
-    }
-    if (key == OF_KEY_BACKSPACE) {
-        if (creatingEnemies) {
-            if (enemies.size() > 0) {
-                enemies.pop_back();
+        if (key == '-') {
+            if (pointSize > SPACER) {
+                pointSize-= SPACER;
             }
         }
-        else {
-            if (collectables.size() > 0) {
-                collectables.pop_back();
+     
+        if (key == OF_KEY_BACKSPACE) {
+            if (creatingEnemies) {
+                if (enemies.size() > 0) {
+                    enemies.pop_back();
+                }
+            }
+            else {
+                if (collectables.size() > 0) {
+                    collectables.pop_back();
+                }
             }
         }
-    }
-    if (key == ' ') {
-        if (creatingEnemies) {
-            enemies.push_back(ofPoint(currentLocation.x - canvasLocation.x,currentLocation.y - canvasLocation.y,pointSize));
+        if (key == ' ') {
+            if (creatingEnemies) {
+                enemies.push_back(ofPoint(currentLocation.x - canvasLocation.x,currentLocation.y - canvasLocation.y,pointSize));
+            }
+            else {
+                collectables.push_back(ofPoint(currentLocation.x - canvasLocation.x,currentLocation.y - canvasLocation.y,pointSize));
+
+            }
+        }
+        if (key == OF_KEY_DOWN && currentLocation.y <= ofGetHeight() - pointSize - SPACER) {
+            currentLocation.y += SPACER;
+        }
+        if (!creatingEnemies) {
+            if (key == OF_KEY_UP && currentLocation.y >= SPACER) {
+                currentLocation.y -= SPACER;
+            }
+            if (key == OF_KEY_LEFT && currentLocation.x >= SPACER) {
+                currentLocation.x -= SPACER;
+            }
+            if (key == OF_KEY_RIGHT && currentLocation.x <= 320 - pointSize - SPACER) {
+                currentLocation.x += SPACER;
+            }
+
         }
         else {
-            collectables.push_back(ofPoint(currentLocation.x - canvasLocation.x,currentLocation.y - canvasLocation.y,pointSize));
+            if (key == OF_KEY_UP && currentLocation.y >= pointSize + SPACER) {
+                currentLocation.y -= SPACER;
+            }
+            if (key == OF_KEY_LEFT && currentLocation.x >= pointSize + SPACER) {
+                currentLocation.x -= SPACER;
+            }
+            if (key == OF_KEY_RIGHT && currentLocation.x <= 320 - pointSize - SPACER) {
+                currentLocation.x += SPACER;
+            }
 
+            
         }
-    }
-    if (key == OF_KEY_DOWN && currentLocation.y <= ofGetHeight() - pointSize - SPACER) {
-        currentLocation.y += SPACER;
-    }
-    if (!creatingEnemies) {
-        if (key == OF_KEY_UP && currentLocation.y >= SPACER) {
-            currentLocation.y -= SPACER;
+        if (key == '[') {
+            canvasLocation.y -= SPACER;
         }
-        if (key == OF_KEY_LEFT && currentLocation.x >= SPACER) {
-            currentLocation.x -= SPACER;
+        if (key == ']') {
+            canvasLocation.y += SPACER;
         }
-        if (key == OF_KEY_RIGHT && currentLocation.x <= 320 - pointSize - SPACER) {
-            currentLocation.x += SPACER;
-        }
-
-    }
-    else {
-        if (key == OF_KEY_UP && currentLocation.y >= pointSize + SPACER) {
-            currentLocation.y -= SPACER;
-        }
-        if (key == OF_KEY_LEFT && currentLocation.x >= pointSize + SPACER) {
-            currentLocation.x -= SPACER;
-        }
-        if (key == OF_KEY_RIGHT && currentLocation.x <= 320 - pointSize - SPACER) {
-            currentLocation.x += SPACER;
-        }
-
-        
-    }
-    if (key == '[') {
-        canvasLocation.y -= SPACER;
-    }
-    if (key == ']') {
-        canvasLocation.y += SPACER;
     }
 }
 
@@ -318,7 +291,6 @@ void testApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void testApp::dragEvent(ofDragInfo dragInfo){ 
     
-    //    dragInfo.files[0].
     if (ofIsStringInString(dragInfo.files[0], "xml")) {
         loadedFile = dragInfo.files[0];
         canvasLocation.set(0, 500);
@@ -334,6 +306,7 @@ void testApp::dragEvent(ofDragInfo dragInfo){
         }
         
     }
+    /* IF AN IMAGE IS DROPPED IN IT'LL SHOW THAT INSTEAD OF CIRCLE/SQUARES */
     else {
         if (creatingEnemies) {
             spriteEnemy.loadImage(dragInfo.files[0]);
@@ -391,7 +364,7 @@ void testApp::guiEvent(ofxUIEventArgs &e)
         pointSize = slider->getScaledValue();
 	}
     
-    if(name == "CLEAR PATTERN") {
+    if(name == "clear pattern") {
         buttonCount++;
         if(buttonCount ==2) {
             enemies.clear();
@@ -400,16 +373,14 @@ void testApp::guiEvent(ofxUIEventArgs &e)
         }
     }
 
-    if (name == "SAVE PATTERN") {
+    if (name == "save pattern") {
         buttonCount++;
         if (buttonCount == 2) {
             savePattern();
-            //            patternNumber++;
-//            patternInput->setTextString("pattern"+ofToString(patternNumber));
             buttonCount = 0;
         }
     }
-    if (name == "ADD TO LEVEL") {
+    if (name == "add to level") {
         buttonCount++;
         if (buttonCount == 2) {
             patterns.push_back(patternInput->getTextString() + ".xml");
@@ -419,10 +390,40 @@ void testApp::guiEvent(ofxUIEventArgs &e)
         }
     }
     if (name == "REMOVE PATTERN") {
-        
+        buttonCount++;
+        if (buttonCount ==2) {
+            vector<ofxUIWidget *> &selected = patternList->getSelected();
+            for(int i = 0; i < selected.size(); i++)
+            {
+                cout << "SELECTED: " << selected[i]->getName() << endl;
+                patterns.erase(patterns.begin() + i);
+                patternList->removeToggle(selected[i]->getName());
+            }
+            buttonCount = 0;
+        }
     }
+        
     if (name == "SAVE LEVEL") {
-    
+        buttonCount++;
+        if (buttonCount == 2) {
+            ofxXmlSettings levelXML;
+
+            levelXML.setValue("name", levelInput->getTextString());
+            levelXML.setValue("author", authorInput->getTextString());
+            levelXML.setValue("complete", completeInput->getTextString());
+            levelXML.setValue("speed", speedSlider->getValue());
+            levelXML.setValue("multiplier", multiSlider->getValue());
+            
+            for (int i = 0; i < patterns.size(); i++) {
+                levelXML.setValue("file", patterns[i], i);
+
+            }
+            
+            
+            levelXML.saveFile("new.level");
+            levelXML.clear();
+            buttonCount = 0;
+        }
     }
     if(name == "OPEN EXISTING PATTERN") {
         buttonCount++;
@@ -439,15 +440,12 @@ void testApp::guiEvent(ofxUIEventArgs &e)
             ofFile file (openFileResult.getPath());
             
             if (file.exists()){
-                //Limiting this example to one image so we delete previous ones
                 
                 string fileExtension = ofToUpper(file.getExtension());
                 
-                //We only want images
                 if (fileExtension == "XML") {
                     cout << "it's XML" << " " << file.getAbsolutePath() << endl;
                     patternInput->setTextString(file.getBaseName());
-//                    myString.substr(0, myString.size()-1);
                     canvasLocation.set(0, 500);
                     if( XML.loadFile(file.getAbsolutePath()) ){
                         enemies.clear();
@@ -456,13 +454,11 @@ void testApp::guiEvent(ofxUIEventArgs &e)
                             ofPoint tmpPoint;
                             tmpPoint.set(XML.getValue("enemy:x", 0, i), XML.getValue("enemy:y", 0, i), XML.getValue("enemy:size", 0, i));
                             enemies.push_back(tmpPoint);
-                            cout << "creating enemy"<< endl;
                         }
                         for (int i = 0; i < XML.getNumTags("collectables"); i++) {
                             ofPoint tmpPoint;
                             tmpPoint.set(XML.getValue("collectable:x", 0, i), XML.getValue("collectable:y", 0, i), XML.getValue("collectable:size", 0, i));
                             collectables.push_back(tmpPoint);
-                            cout << "creating collectable" << endl;
                         }
                         
                     }
@@ -520,11 +516,9 @@ void testApp::processOpenFileSelection(ofFileDialogResult openFileResult){
 	ofFile file (openFileResult.getPath());
 	
 	if (file.exists()){
-		//Limiting this example to one image so we delete previous ones
 
 		string fileExtension = ofToUpper(file.getExtension());
 		
-		//We only want images
 		if (fileExtension == "XML") {
 		
         canvasLocation.set(0, 500);
@@ -548,5 +542,6 @@ void testApp::processOpenFileSelection(ofFileDialogResult openFileResult){
 void testApp::exit() {
     delete gui;
     delete levelGui;
+    delete guiTabBar;
     
 }
